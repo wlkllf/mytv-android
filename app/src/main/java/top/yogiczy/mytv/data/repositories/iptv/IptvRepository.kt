@@ -11,6 +11,8 @@ import top.yogiczy.mytv.data.entities.IptvList
 import top.yogiczy.mytv.data.repositories.FileCacheRepository
 import top.yogiczy.mytv.data.repositories.iptv.parser.IptvParser
 import top.yogiczy.mytv.utils.Logger
+import top.yogiczy.mytv.utils.DeviceMacInterceptor
+import top.yogiczy.mytv.MyTVApplication
 
 /**
  * 直播源获取
@@ -24,7 +26,9 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
     private suspend fun fetchSource(sourceUrl: String) = withContext(Dispatchers.IO) {
         log.d("获取远程直播源: $sourceUrl")
 
-        val client = OkHttpClient()
+        val client = OkHttpClient.Builder()
+            .addInterceptor(DeviceMacInterceptor(MyTVApplication.application))
+            .build()
         val request = Request.Builder().url(sourceUrl).build()
 
         try {
