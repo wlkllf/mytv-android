@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "top.yogiczy.mytv"
-        minSdk = 21
+        minSdk = 19
         targetSdk = 34
         versionCode = 1
         versionName = "1.4.4"
