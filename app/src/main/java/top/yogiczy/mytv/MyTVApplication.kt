@@ -1,21 +1,8 @@
-package top.yogiczy.mytv
+override fun onCreate() {
+    super.onCreate()
+    AppGlobal.cacheDir = cacheDir
+    // 新增这一行，初始化全局上下文
+    AppGlobal.context = applicationContext
 
-import android.app.Application
-import okhttp3.OkHttpClient
-import top.yogiczy.mytv.utils.DeviceMacInterceptor
-
-class MyTVApplication : Application() {
-    companion object {
-        lateinit var instance: MyTVApplication
-        lateinit var okHttpClient: OkHttpClient
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        instance = this
-
-        okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(DeviceMacInterceptor(this))
-            .build()
-    }
+    // 原来其他初始化代码保留不动
 }
