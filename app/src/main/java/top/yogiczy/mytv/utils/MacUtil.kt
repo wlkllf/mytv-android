@@ -10,9 +10,6 @@ object MacUtil {
     private const val SP_NAME = "device_instance"
     private const val KEY_INSTANCE_UUID = "instance_uuid"
 
-    /**
-     * 读取有线网卡eth0的MAC地址
-     */
     fun getEthernetMac(): String {
         return try {
             val br = BufferedReader(FileReader("/sys/class/net/eth0/address"))
@@ -28,9 +25,6 @@ object MacUtil {
         }
     }
 
-    /**
-     * 获取APP实例UUID，卸载重装自动生成新ID
-     */
     fun getAppInstanceId(context: Context): String {
         val sp: SharedPreferences = context.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE)
         var uuid = sp.getString(KEY_INSTANCE_UUID, null)
@@ -41,4 +35,3 @@ object MacUtil {
         return uuid
     }
 }
-
