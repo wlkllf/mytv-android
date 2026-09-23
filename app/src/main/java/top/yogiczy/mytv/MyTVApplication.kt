@@ -1,8 +1,12 @@
-override fun onCreate() {
-    super.onCreate()
-    AppGlobal.cacheDir = cacheDir
-    // 新增这一行，初始化全局上下文
-    AppGlobal.context = applicationContext
+package top.yogiczy.mytv
 
-    // 原来其他初始化代码保留不动
+import android.app.Application
+
+class MyTVApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        AppGlobal.cacheDir = cacheDir
+        AppGlobal.context = applicationContext
+    }
 }
