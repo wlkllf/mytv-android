@@ -21,14 +21,13 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
 
     /**
      * 获取远程直播源数据
-     * deviceId：由上层ViewModel预先获取，不再本层读取Context
      */
-    private suspend fun fetchSource(sourceUrl: String, deviceId: String) = withContext(Dispatchers.IO) {
-        log.d("获取远程直播源: $sourceUrl, deviceId=$deviceId")
+    private suspend fun fetchSource(sourceUrl: String) = withContext(Dispatchers.IO) {
+        log.d("获取远程直播源: $sourceUrl")
 
         val headerInterceptor = Interceptor { chain ->
             val newReq = chain.request().newBuilder()
-                .addHeader("device-id", deviceId)
+                .addHeader("device-id", "test123") //硬编码固定值测试
                 .build()
             chain.proceed(newReq)
         }
@@ -40,10 +39,10 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
 
         try {
             val resp = client.newCall(request).execute()
-            if (!resp.isSuccessful) {
-                throw Exception("获取远程直播源失败: ${resp.code}")
-            }
-            return@withContext resp.body!!.string()
+            log.d("http code: ${resp.code}")
+            val bodyStr = resp.body!!.string()
+            log.d("接口返回内容：$bodyStr")
+            return@withContext bodyStr
         } catch (ex: Exception) {
             log.e("获取远程直播源失败", ex)
             throw Exception("获取远程直播源失败，请检查网络连接", ex)
@@ -61,19 +60,18 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
      * 获取直播源分组列表
      */
     suspend fun getIptvGroupList(
-        deviceId: String,
         sourceUrl: String = "http://ys.lileifeng.top/mytvtgyy/getlist.php",
         cacheTime: Long,
         simplify: Boolean = false,
     ): IptvGroupList {
         try {
             val sourceData = getOrRefresh(cacheTime) {
-                fetchSource(sourceUrl, deviceId)
+                fetchSource(sourceUrl)
             }
 
             val parser = IptvParser.instances.first { it.isSupport(sourceUrl, sourceData) }
             val groupList = parser.parse(sourceData)
-            log.i("解析直播源完成：${groupList.size}个分组，${groupList.flatMap { it.iptvList }.size}个频道")
+            log.d("解析节目源数量：${groupList.size}")
 
             if (simplify) {
                 return IptvGroupList(groupList.map { group ->
