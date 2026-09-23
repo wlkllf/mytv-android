@@ -1,14 +1,20 @@
 package top.yogiczy.mytv
 
 import android.app.Application
-import top.yogiczy.mytv.ui.utils.SP
+import top.yogiczy.mytv.utils.DeviceMacInterceptor
 
 class MyTVApplication : Application() {
+    companion object {
+        lateinit var instance: MyTVApplication
+        lateinit var okHttpClient: okhttp3.OkHttpClient
+    }
+
     override fun onCreate() {
         super.onCreate()
+        instance = this
 
-        UnsafeTrustManager.enableUnsafeTrustManager()
-        AppGlobal.cacheDir = applicationContext.cacheDir
-        SP.init(applicationContext)
+        okHttpClient = okhttp3.OkHttpClient.Builder()
+            .addInterceptor(DeviceMacInterceptor(this))
+            .build()
     }
 }
