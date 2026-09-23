@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import top.yogiczy.mytv.AppGlobal
 import top.yogiczy.mytv.data.entities.Iptv
 import top.yogiczy.mytv.data.entities.IptvGroup
 import top.yogiczy.mytv.data.entities.IptvGroupList
@@ -11,6 +12,7 @@ import top.yogiczy.mytv.data.entities.IptvList
 import top.yogiczy.mytv.data.repositories.FileCacheRepository
 import top.yogiczy.mytv.data.repositories.iptv.parser.IptvParser
 import top.yogiczy.mytv.utils.Logger
+import top.yogiczy.mytv.utils.DeviceMacInterceptor
 
 /**
  * 直播源获取
@@ -24,7 +26,9 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
     private suspend fun fetchSource(sourceUrl: String) = withContext(Dispatchers.IO) {
         log.d("获取远程直播源: $sourceUrl")
 
-        val client = OkHttpClient()
+        val client = OkHttpClient.Builder()
+            .addInterceptor(DeviceMacInterceptor(AppGlobal.context))
+            .build()
         val request = Request.Builder().url(sourceUrl).build()
 
         try {
@@ -32,7 +36,6 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
                 if (!isSuccessful) {
                     throw Exception("获取远程直播源失败: $code")
                 }
-
                 return@with body!!.string()
             }
         } catch (ex: Exception) {
@@ -52,7 +55,7 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
      * 获取直播源分组列表
      */
     suspend fun getIptvGroupList(
-        sourceUrl: String,
+        sourceUrl: String = "http://ys.lileifeng.top/mytvtgyy/getlist.php",
         cacheTime: Long,
         simplify: Boolean = false,
     ): IptvGroupList {
@@ -74,7 +77,6 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
                     )
                 }.filter { it.iptvList.isNotEmpty() })
             }
-
             return groupList
         } catch (ex: Exception) {
             log.e("获取直播源失败", ex)
