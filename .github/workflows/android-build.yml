@@ -2,6 +2,7 @@ name: Build APK
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:  # 加上这一行，网页就出现Run按钮
 
 jobs:
   build:
