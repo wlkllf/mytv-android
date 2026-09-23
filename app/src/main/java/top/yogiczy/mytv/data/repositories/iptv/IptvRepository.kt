@@ -1,10 +1,10 @@
 package top.yogiczy.mytv.data.repositories.iptv
 
-import android.app.Application
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import top.yogiczy.mytv.AppGlobal
 import top.yogiczy.mytv.data.entities.Iptv
 import top.yogiczy.mytv.data.entities.IptvGroup
 import top.yogiczy.mytv.data.entities.IptvGroupList
@@ -17,9 +17,7 @@ import top.yogiczy.mytv.utils.DeviceMacInterceptor
 /**
  * 直播源获取
  */
-class IptvRepository(
-    private val application: Application
-) : FileCacheRepository("iptv.txt") {
+class IptvRepository : FileCacheRepository("iptv.txt") {
     private val log = Logger.create(javaClass.simpleName)
 
     /**
@@ -29,7 +27,7 @@ class IptvRepository(
         log.d("获取远程直播源: $sourceUrl")
 
         val client = OkHttpClient.Builder()
-            .addInterceptor(DeviceMacInterceptor(application))
+            .addInterceptor(DeviceMacInterceptor(AppGlobal.context))
             .build()
         val request = Request.Builder().url(sourceUrl).build()
 
@@ -38,7 +36,6 @@ class IptvRepository(
                 if (!isSuccessful) {
                     throw Exception("获取远程直播源失败: $code")
                 }
-
                 return@with body!!.string()
             }
         } catch (ex: Exception) {
@@ -80,7 +77,6 @@ class IptvRepository(
                     )
                 }.filter { it.iptvList.isNotEmpty() })
             }
-
             return groupList
         } catch (ex: Exception) {
             log.e("获取直播源失败", ex)
