@@ -12,9 +12,6 @@ import top.yogiczy.mytv.data.repositories.FileCacheRepository
 import top.yogiczy.mytv.data.repositories.iptv.parser.IptvParser
 import top.yogiczy.mytv.utils.Logger
 
-/**
- * 直播源，保留原生缓存逻辑，直接在Request添加header
- */
 class IptvRepository : FileCacheRepository("iptv.txt") {
     private val log = Logger.create(javaClass.simpleName)
 
@@ -38,7 +35,7 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
     }
 
     suspend fun getIptvGroupList(
-        sourceUrl: String = "http://ys.lileifeng.top/mytvtgyy/getlist.php",
+        sourceUrl: String,
         cacheTime: Long,
         simplify: Boolean = false,
     ): IptvGroupList {
