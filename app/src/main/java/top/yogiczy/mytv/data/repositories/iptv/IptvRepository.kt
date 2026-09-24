@@ -13,29 +13,24 @@ import top.yogiczy.mytv.data.repositories.iptv.parser.IptvParser
 import top.yogiczy.mytv.utils.Logger
 
 /**
- * 直播源【调试版：request直接加header，全链路异常捕获，强制不走缓存】
+ * 直播源，保留原生缓存逻辑，直接在Request添加header
  */
 class IptvRepository : FileCacheRepository("iptv.txt") {
     private val log = Logger.create(javaClass.simpleName)
 
-    private suspend fun fetchSource(sourceUrl: String): String? = withContext(Dispatchers.IO) {
-        return@withContext try {
-            log.d("=====准备发起HTTP请求=====")
-            val client = OkHttpClient.Builder().build()
-            val request = Request.Builder()
-                .url(sourceUrl)
-                .header("device-id", "test123")
-                .build()
+    private suspend fun fetchSource(sourceUrl: String) = withContext(Dispatchers.IO) {
+        log.d("===== 发起HTTP请求 =====")
+        val client = OkHttpClient.Builder().build()
+        val request = Request.Builder()
+            .url(sourceUrl)
+            .header("device-id", "test123")
+            .build()
 
-            val resp = client.newCall(request).execute()
-            log.d("HTTP状态码: ${resp.code}")
-            val bodyStr = resp.body?.string() ?: ""
-            log.d("PHP返回原始内容：$bodyStr")
-            bodyStr
-        } catch (ex: Exception) {
-            log.e("fetchSource网络请求异常", ex)
-            null
-        }
+        val resp = client.newCall(request).execute()
+        log.d("http code: ${resp.code}")
+        val bodyStr = resp.body!!.string()
+        log.d("php返回内容：$bodyStr")
+        return@withContext bodyStr
     }
 
     private fun simplifyTest(group: IptvGroup, iptv: Iptv): Boolean {
@@ -47,32 +42,24 @@ class IptvRepository : FileCacheRepository("iptv.txt") {
         cacheTime: Long,
         simplify: Boolean = false,
     ): IptvGroupList {
-        val sourceData = fetchSource(sourceUrl)
-        if (sourceData.isNullOrBlank()) {
-            log.e("网络获取节目源返回空或者请求失败")
-            throw Exception("网络请求获取节目源失败")
+        val sourceData = getOrRefresh(cacheTime) {
+            fetchSource(sourceUrl)
         }
 
-        return try {
-            val parser = IptvParser.instances.first { it.isSupport(sourceUrl, sourceData) }
-            val groupList = parser.parse(sourceData)
-            log.d("解析完成，分组数量=${groupList.size}")
+        val parser = IptvParser.instances.first { it.isSupport(sourceUrl, sourceData) }
+        val groupList = parser.parse(sourceData)
+        log.d("解析完成，分组数量=${groupList.size}")
 
-            if (simplify) {
-                IptvGroupList(groupList.map { group ->
-                    IptvGroup(
-                        name = group.name,
-                        iptvList = IptvList(group.iptvList.filter { iptv ->
-                            simplifyTest(group, iptv)
-                        })
-                    )
-                }.filter { it.iptvList.isNotEmpty() })
-            } else {
-                groupList
-            }
-        } catch (ex: Exception) {
-            log.e("解析节目源出错", ex)
-            throw Exception("解析节目源失败：${ex.message}")
+        if (simplify) {
+            return IptvGroupList(groupList.map { group ->
+                IptvGroup(
+                    name = group.name,
+                    iptvList = IptvList(group.iptvList.filter { iptv ->
+                        simplifyTest(group, iptv)
+                    })
+                )
+            }.filter { it.iptvList.isNotEmpty() })
         }
+        return groupList
     }
 }
