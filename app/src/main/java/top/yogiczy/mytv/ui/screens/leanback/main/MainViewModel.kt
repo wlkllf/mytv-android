@@ -40,7 +40,7 @@ class LeanbackMainViewModel : ViewModel() {
             emit(
                 iptvRepository.getIptvGroupList(
                     sourceUrl = SP.iptvSourceUrl,
-                    cacheTime = SP.iptvSourceCacheTime,
+                    cacheTime = 0L,
                     simplify = SP.iptvSourceSimplify,
                 )
             )
